@@ -1,5 +1,6 @@
 package org.education.controller;
 
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +13,10 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.util.Collection;
 
-@RequiredArgsConstructor
+
 @RestController
 @RequestMapping("/api/v1/")
+@AllArgsConstructor
 public class WriteFilesName {
 
     @Autowired
