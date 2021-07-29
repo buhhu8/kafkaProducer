@@ -10,7 +10,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 
-
 public class KafkaProducerStarter {
 
         public static void main(String[] args) {

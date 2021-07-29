@@ -1,28 +1,25 @@
 package org.education.controller;
 
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.util.Collection;
 
 
-@RestController
-@RequestMapping("/api/v1/")
-@AllArgsConstructor
+@Service
+@RequiredArgsConstructor
 public class WriteFilesName {
 
-    @Autowired
+
     private final ReadFilesName readFilesName;
-    @Autowired
-    private final KafkaTemplate<String, String> kafkaTemplate;
+
+    private final KafkaTemplate<String,String> kafkaTemplate;
 
     @SneakyThrows
     @Scheduled(fixedRate = 3000)
@@ -33,6 +30,7 @@ public class WriteFilesName {
             kafkaTemplate.send("msg", "1", result);
             writer.write(result);
             writer.newLine();
+            System.out.println(result);
         }
         writer.close();
     }
