@@ -16,9 +16,7 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public class WriteFilesName {
 
-
     private final ReadFilesName readFilesName;
-
     private final KafkaTemplate<String,String> kafkaTemplate;
 
     @SneakyThrows
