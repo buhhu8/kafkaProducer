@@ -15,48 +15,85 @@ services:
       - POSTGRES_PASSWORD=0280829Denis
       - POSTGRES_USER=postgres
       - POSTGRES_DB=kafka_db_read
-
-  zoo1:
-    image: wurstmeister/zookeeper
-    networks:
-      - inner
-
-    ports:
-      - "2181:2181"
-    environment:
-      ZOO_MY_ID: 1
-      ZOO_PORT: 2181
-      ZOO_SERVERS: server.1=zoo1:2888:3888
-    volumes:
-      - ./kafka/zoo/data:/data
-      - ./kafka/zoo/datalog:/datalog
-
-  kafka1:
-    image: wurstmeister/kafka
-    hostname: kafka1
+#
+#  zoo:
+#    image: wurstmeister/zookeeper
 #    networks:
 #      - inner
+#
+#    ports:
+#      - "2181:2181"
+#    environment:
+#      ZOO_MY_ID: 1
+#      ZOO_PORT: 2181
+##      ZOO_SERVERS: server.1=zoo1:2888:3888
+#    volumes:
+#      - ./kafka/zoo/data:/data
+#      - ./kafka/zoo/datalog:/datalog
+#
+#  kafka1:
+#    image: wurstmeister/kafka
+#    hostname: kafka1
+##    networks:
+##      - inner
+##    ports:
+##      - "9092:9092"
+#    expose:
+#      - "9093"
+#    environment:
+#      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+#      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9093,OUTSIDE://1.2.3.4:9092
+#      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:SASL_PLAINTEXT
+#      KAFKA_LISTENERS: INSIDE://0.0.0.0:9093,OUTSIDE://0.0.0.0:9092
+#      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+#      KAFKA_ZOOKEEPER_CONNECT: "zoo:2181"
+#      KAFKA_BROKER_ID: 1
+#      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+#      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+##      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+##      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+##      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+#    volumes:
+#      - ./kafka/kafka/data:/var/lib/kafka/data
+#    depends_on:
+#      - zoo
+
+
+  zookeeper:
+    image: 'bitnami/zookeeper:3.5.7'
     ports:
-      - "9092:9092"
-    expose:
-      - "9093"
-    environment:
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9093,OUTSIDE://1.2.3.4:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:SASL_PLAINTEXT
-      KAFKA_LISTENERS: INSIDE://0.0.0.0:9093,OUTSIDE://0.0.0.0:9092
-      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
-      KAFKA_ZOOKEEPER_CONNECT: "zoo1:2181"
-      KAFKA_BROKER_ID: 1
-      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-#      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
-#      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
-#      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      - '2181:2181'
     volumes:
-      - ./kafka/kafka/data:/var/lib/kafka/data
+      - './zookeeper_data:/bitnami'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+  kafka:
+    image: 'bitnami/kafka:2.5.0'
+    container_name: kafka
+    ports:
+      - '9092:9092'
+    volumes:
+      - './kafka_data:/bitnami'
+      - './kafka_log:/tmp/kafka_mounts/logs'
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LOG_DIRS=/tmp/kafka_mounts/logs
     depends_on:
-      - zoo1
+      - zookeeper
+  kafka-connect:
+    image: 'bitnami/kafka:2.5.0'
+    container_name: kafka_connect
+    ports:
+      - '8083:8083'
+    volumes:
+      - './kafka_connect_data:/bitnami'
+      - './kafka_connect_config/connect-distributed.properties:/opt/bitnami/kafka/config/connect-distributed.properties'
+    depends_on:
+      - zookeeper
+      - kafka
+    command: /opt/bitnami/kafka/bin/connect-distributed.sh /opt/bitnami/kafka/config/connect-distributed.properties
+
 
   # APP*****************************************
   springbootapp:
@@ -70,7 +107,7 @@ services:
       - 8080:5698
     depends_on:
       - postgres
-      - kafka1
+      - kafka
     links:
       - postgres
 volumes:
