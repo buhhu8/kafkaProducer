@@ -1,5 +1,13 @@
 server.port: 5698
 spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/newFile
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: 0280829Denis
+  jpa:
+    hibernate:
+      ddl-auto: none
   kafka:
     producer:
       bootstrap-servers: localhost:9092
